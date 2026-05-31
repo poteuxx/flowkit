@@ -1,243 +1,196 @@
 /**
- * Module: Professional Image Editor
- * Functional recreation of Photopea concepts
+ * Module: Image Studio (High-Performance Interaction Edition)
+ * Powered by Fabric.js for professional object manipulation
  */
 
 export default class ImageEditorModule {
-    constructor(container) {
+    constructor(container, app) {
         this.container = container;
-        this.layers = [];
-        this.activeLayerIndex = -1;
-        this.filters = {
-            brightness: 100,
-            contrast: 100,
-            saturate: 100,
-            blur: 0,
-            grayscale: 0
-        };
+        this.app = app;
+        this.canvas = null;
+        this.fabricUrl = 'https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js';
     }
 
     async render() {
         this.container.innerHTML = `
-            <div class="editor-layout" style="display: grid; grid-template-columns: 1fr 300px; gap: 1.5rem; height: calc(100vh - 120px);">
-                <!-- Canvas Workspace -->
-                <div class="workspace glass-card" style="display: flex; flex-direction: column; overflow: hidden; position: relative;">
-                    <div class="toolbar" style="padding: 0.75rem; border-bottom: 1px solid var(--border-glass); display: flex; gap: 1rem;">
-                        <button id="add-layer" title="Ajouter une image" style="background: var(--bg-secondary); border: 1px solid var(--border-glass); color: white; padding: 0.5rem 1rem; border-radius: 0.4rem; cursor: pointer;">
-                            <i class="fa-solid fa-plus"></i>
-                        </button>
-                        <button id="add-text" title="Ajouter du texte" style="background: var(--bg-secondary); border: 1px solid var(--border-glass); color: white; padding: 0.5rem 1rem; border-radius: 0.4rem; cursor: pointer;">
-                            <i class="fa-solid fa-font"></i>
-                        </button>
-                        <button id="export-image" title="Exporter" style="background: var(--accent-primary); border: none; color: white; padding: 0.5rem 1rem; border-radius: 0.4rem; cursor: pointer;">
-                            <i class="fa-solid fa-download"></i> Exporter
-                        </button>
-                    </div>
-                    
-                    <div id="canvas-container" style="flex-grow: 1; background: #000; position: relative; overflow: auto; display: flex; align-items: center; justify-content: center; background-image: conic-gradient(#1e293b 25%, #0f172a 0 50%, #1e293b 0 75%, #0f172a 0); background-size: 20px 20px;">
-                        <!-- Canvas layers will be inserted here -->
-                    </div>
-
-                    <input type="file" id="image-loader" style="display: none;" accept="image/*">
+            <div class="editor-layout" style="display: grid; grid-template-columns: 80px 1fr 300px; gap: 1rem; height: calc(100vh - 120px);">
+                <!-- Toolbar -->
+                <div class="glass-card flex flex-col gap-4 items-center py-4" style="background: rgba(2,6,23,0.5);">
+                    <button class="tool-icon active" id="tool-select" title="Sélectionner"><i class="fa-solid fa-arrow-pointer"></i></button>
+                    <button class="tool-icon" id="tool-brush" title="Pinceau"><i class="fa-solid fa-paintbrush"></i></button>
+                    <button class="tool-icon" id="tool-text" title="Texte"><i class="fa-solid fa-font"></i></button>
+                    <button class="tool-icon" id="tool-rect" title="Rectangle"><i class="fa-regular fa-square"></i></button>
+                    <div style="flex-grow: 1;"></div>
+                    <button class="tool-icon" id="tool-add-img" title="Ajouter Image"><i class="fa-solid fa-plus"></i></button>
                 </div>
 
-                <!-- Control Panel -->
-                <div class="controls flex flex-col gap-4">
-                    <div class="glass-card layers-panel" style="height: 40%;">
-                        <h4 style="margin-bottom: 1rem; font-size: 0.9rem; text-transform: uppercase;">Calques</h4>
-                        <div id="layer-list" style="display: flex; flex-direction: column; gap: 0.5rem;">
-                            <!-- Layer items -->
+                <!-- Canvas Workspace -->
+                <div class="workspace glass-card" style="padding: 0; overflow: hidden; display: flex; flex-direction: column; position: relative;">
+                    <div class="top-bar-editor" style="padding: 0.75rem 1.5rem; border-bottom: 1px solid var(--border-glass); display: flex; justify-content: space-between; background: rgba(0,0,0,0.2);">
+                        <div style="display:flex; gap: 1rem;">
+                            <button class="poteuxx-mini-btn" id="undo-btn"><i class="fa-solid fa-rotate-left"></i></button>
+                            <button class="poteuxx-mini-btn" id="redo-btn"><i class="fa-solid fa-rotate-right"></i></button>
                         </div>
+                        <button id="export-pro" class="poteuxx-mini-btn" style="background: var(--accent-primary);"><i class="fa-solid fa-download"></i> Exporter HD</button>
+                    </div>
+                    
+                    <div id="fabric-wrapper" style="flex-grow: 1; display: flex; justify-content: center; align-items: center; overflow: auto; background: #0b1120;">
+                        <canvas id="main-canvas"></canvas>
                     </div>
 
-                    <div class="glass-card filters-panel" style="flex-grow: 1;">
-                        <h4 style="margin-bottom: 1rem; font-size: 0.9rem; text-transform: uppercase;">Ajustements</h4>
-                        <div class="filter-controls" style="display: flex; flex-direction: column; gap: 1rem;">
-                            ${Object.keys(this.filters).map(f => `
-                                <div>
-                                    <label style="font-size: 0.8rem; color: var(--text-secondary); display: flex; justify-content: space-between;">
-                                        ${f.charAt(0).toUpperCase() + f.slice(1)}
-                                        <span id="val-${f}">${this.filters[f]}</span>
-                                    </label>
-                                    <input type="range" class="filter-range" data-filter="${f}" min="${f === 'blur' ? 0 : 0}" max="${f === 'blur' ? 20 : 200}" value="${this.filters[f]}" style="width: 100%;">
-                                </div>
-                            `).join('')}
+                    <input type="file" id="img-loader" style="display: none;" accept="image/*">
+                </div>
+
+                <!-- Layers & Properties -->
+                <div class="flex flex-col gap-4">
+                    <div class="glass-card" style="height: 50%;">
+                        <h4 style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 1rem;">Propriétés Objet</h4>
+                        <div id="obj-props" style="display: flex; flex-direction: column; gap: 1rem;">
+                            <p style="text-align:center; color: var(--text-secondary); padding-top: 2rem;">Sélectionnez un objet pour modifier sa couleur ou son opacité.</p>
                         </div>
+                    </div>
+                    <div class="glass-card" style="flex-grow: 1;">
+                        <h4 style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 1rem;">Historique Calques</h4>
+                        <div id="layer-stack" style="display: flex; flex-direction: column; gap: 0.5rem;"></div>
                     </div>
                 </div>
             </div>
+
+            <style>
+                .tool-icon { background: none; border: 1px solid transparent; color: var(--text-secondary); width: 45px; height: 45px; border-radius: 0.75rem; cursor: pointer; font-size: 1.2rem; transition: all 0.2s; }
+                .tool-icon:hover { color: white; background: rgba(255,255,255,0.05); }
+                .tool-icon.active { background: var(--accent-primary); color: white; box-shadow: 0 0 15px var(--accent-glow); }
+                .poteuxx-mini-btn { background: var(--bg-secondary); border: 1px solid var(--border-glass); color: white; padding: 0.5rem 1rem; border-radius: 0.4rem; cursor: pointer; font-size: 0.8rem; font-weight: 700; }
+            </style>
         `;
 
-        this.setupHandlers();
+        await this.loadFabric();
+        this.initCanvas();
     }
 
-    setupHandlers() {
-        const loader = document.getElementById('image-loader');
-        const addBtn = document.getElementById('add-layer');
-        addBtn.onclick = () => loader.click();
+    async loadFabric() {
+        if (window.fabric) return;
+        const script = document.createElement('script');
+        script.src = this.fabricUrl;
+        document.head.appendChild(script);
+        await new Promise(r => script.onload = r);
+    }
 
-        loader.onchange = (e) => {
-            const file = e.target.files[0];
-            if (file) this.addLayer(file);
+    initCanvas() {
+        const wrapper = document.getElementById('fabric-wrapper');
+        this.canvas = new fabric.Canvas('main-canvas', {
+            width: 800,
+            height: 600,
+            backgroundColor: '#1e293b'
+        });
+
+        this.setupInteractions();
+    }
+
+    setupInteractions() {
+        const tools = {
+            select: document.getElementById('tool-select'),
+            brush: document.getElementById('tool-brush'),
+            text: document.getElementById('tool-text'),
+            rect: document.getElementById('tool-rect'),
+            addImg: document.getElementById('tool-add-img')
         };
 
-        document.getElementById('add-text').onclick = () => this.addTextLayer();
-        const exportBtn = document.getElementById('export-image');
-        exportBtn.onclick = () => this.export();
-
-        const ranges = document.querySelectorAll('.filter-range');
-        ranges.forEach(r => {
-            r.oninput = (e) => {
-                const filter = e.target.dataset.filter;
-                this.filters[filter] = e.target.value;
-                document.getElementById(`val-${filter}`).innerText = e.target.value;
-                this.applyFilters();
-            };
-        });
-    }
-
-    addTextLayer() {
-        const text = prompt('Texte :', 'FLOWKIT');
-        if (!text) return;
-
-        const canvas = document.createElement('canvas');
-        canvas.width = 800; canvas.height = 200;
-        const ctx = canvas.getContext('2d');
-        ctx.font = 'bold 100px Inter';
-        ctx.fillStyle = '#06b6d4';
-        ctx.textAlign = 'center';
-        ctx.fillText(text, 400, 120);
-
-        this.layers.push({
-            id: Date.now(),
-            name: `Texte: ${text}`,
-            canvas,
-            visible: true
-        });
-        this.activeLayerIndex = this.layers.length - 1;
-        this.updateLayerUI();
-        this.refreshWorkspace();
-    }
-
-    async addLayer(file) {
-        const url = URL.createObjectURL(file);
-        const img = new Image();
-        img.src = url;
-        await new Promise(r => img.onload = r);
-
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0);
-
-        const layer = {
-            id: Date.now(),
-            name: file.name,
-            canvas,
-            img,
-            visible: true
+        const setActive = (btn) => {
+            Object.values(tools).forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
         };
 
-        this.layers.push(layer);
-        this.activeLayerIndex = this.layers.length - 1;
-        this.updateLayerUI();
-        this.refreshWorkspace();
-    }
+        tools.select.onclick = () => {
+            this.canvas.isDrawingMode = false;
+            setActive(tools.select);
+        };
 
-    updateLayerUI() {
-        const list = document.getElementById('layer-list');
-        list.innerHTML = '';
-        
-        [...this.layers].reverse().forEach((layer, idx) => {
-            const actualIdx = this.layers.length - 1 - idx;
-            const item = document.createElement('div');
-            item.className = 'layer-item';
-            item.style = `
-                display: flex; align-items: center; gap: 0.75rem; 
-                padding: 0.5rem; border-radius: 0.4rem; background: ${actualIdx === this.activeLayerIndex ? 'rgba(6, 182, 212, 0.2)' : 'rgba(255,255,255,0.05)'};
-                cursor: pointer; border: 1px solid ${actualIdx === this.activeLayerIndex ? 'var(--accent-primary)' : 'transparent'};
-            `;
+        tools.brush.onclick = () => {
+            this.canvas.isDrawingMode = true;
+            this.canvas.freeDrawingBrush.color = '#06b6d4';
+            this.canvas.freeDrawingBrush.width = 5;
+            setActive(tools.brush);
+        };
 
-            item.innerHTML = `
-                <i class="fa-solid ${layer.visible ? 'fa-eye' : 'fa-eye-slash'}" style="color: var(--text-secondary);"></i>
-                <span style="font-size: 0.8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-grow: 1;">${layer.name}</span>
-            `;
+        tools.text.onclick = () => {
+            const text = new fabric.IText('Double clic pour éditer', {
+                left: 100, top: 100, fill: '#fff', fontFamily: 'Inter'
+            });
+            this.canvas.add(text);
+            setActive(tools.select);
+            this.canvas.isDrawingMode = false;
+        };
 
-            item.onclick = () => {
-                this.activeLayerIndex = actualIdx;
-                this.updateLayerUI();
+        tools.rect.onclick = () => {
+            const rect = new fabric.Rect({
+                left: 100, top: 100, fill: '#06b6d4', width: 100, height: 100, rx: 10, ry: 10
+            });
+            this.canvas.add(rect);
+            setActive(tools.select);
+        };
+
+        tools.addImg.onclick = () => document.getElementById('img-loader').click();
+        document.getElementById('img-loader').onchange = (e) => {
+            const reader = new FileReader();
+            reader.onload = (f) => {
+                fabric.Image.fromURL(f.target.result, (img) => {
+                    img.scaleToWidth(400);
+                    this.canvas.add(img);
+                    this.canvas.centerObject(img);
+                });
             };
+            reader.readAsDataURL(e.target.files[0]);
+        };
 
-            const eye = item.querySelector('.fa-solid');
-            eye.onclick = (e) => {
-                e.stopPropagation();
-                layer.visible = !layer.visible;
-                this.updateLayerUI();
-                this.refreshWorkspace();
-            };
+        document.getElementById('export-pro').onclick = () => {
+            const dataURL = this.canvas.toDataURL({ format: 'png', quality: 1 });
+            const link = document.createElement('a');
+            link.download = 'flowkit_studio_export.png';
+            link.href = dataURL;
+            link.click();
+        };
 
-            list.appendChild(item);
+        // Unified Object Property Editor
+        this.canvas.on('selection:created', (e) => this.updateProps(e.selected[0]));
+        this.canvas.on('selection:updated', (e) => this.updateProps(e.selected[0]));
+        this.canvas.on('selection:cleared', () => {
+            document.getElementById('obj-props').innerHTML = '<p style="text-align:center; color: var(--text-secondary); padding-top: 2rem;">Sélectionnez un objet.</p>';
         });
     }
 
-    refreshWorkspace() {
-        const container = document.getElementById('canvas-container');
-        container.innerHTML = '';
-        
-        // Find max dimensions
-        let maxWidth = 0, maxHeight = 0;
-        this.layers.forEach(l => {
-            if (l.canvas.width > maxWidth) maxWidth = l.canvas.width;
-            if (l.canvas.height > maxHeight) maxHeight = l.canvas.height;
-        });
-
-        // Add a master display canvas
-        const display = document.createElement('canvas');
-        display.width = maxWidth;
-        display.height = maxHeight;
-        display.style = 'max-width: 100%; max-height: 100%; box-shadow: 0 0 40px rgba(0,0,0,0.5);';
-        const ctx = display.getContext('2d');
-
-        this.layers.forEach(l => {
-            if (l.visible) {
-                ctx.drawImage(l.canvas, 0, 0);
-            }
-        });
-
-        container.appendChild(display);
-        this.displayCanvas = display;
-        this.applyFilters();
-    }
-
-    applyFilters() {
-        if (!this.displayCanvas) return;
-        const s = this.filters;
-        this.displayCanvas.style.filter = `
-            brightness(${s.brightness}%) 
-            contrast(${s.contrast}%) 
-            saturate(${s.saturate}%) 
-            blur(${s.blur}px) 
-            grayscale(${s.grayscale}%)
+    updateProps(obj) {
+        const props = document.getElementById('obj-props');
+        props.innerHTML = `
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <div>
+                    <label style="font-size: 0.7rem;">COULEUR</label>
+                    <input type="color" id="obj-color-input" value="${obj.fill || '#ffffff'}" style="width: 100%; border: none; height: 30px; background: none;">
+                </div>
+                <div>
+                    <label style="font-size: 0.7rem;">OPACITÉ (${Math.round(obj.opacity * 100)}%)</label>
+                    <input type="range" id="obj-opacity-input" min="0" max="1" step="0.1" value="${obj.opacity}" style="width:100%;">
+                </div>
+                <button id="obj-delete" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid #ef4444; width: 100%; padding: 0.5rem; border-radius: 0.4rem; cursor: pointer; margin-top: 1rem;">Supprimer</button>
+            </div>
         `;
+
+        document.getElementById('obj-color-input').oninput = (e) => {
+            obj.set('fill', e.target.value);
+            this.canvas.renderAll();
+        };
+        document.getElementById('obj-opacity-input').oninput = (e) => {
+            obj.set('opacity', parseFloat(e.target.value));
+            this.canvas.renderAll();
+        };
+        document.getElementById('obj-delete').onclick = () => {
+            this.canvas.remove(obj);
+            this.canvas.discardActiveObject();
+            this.canvas.renderAll();
+        };
     }
 
-    export() {
-        if (!this.displayCanvas) return;
-        const link = document.createElement('a');
-        link.download = 'flowkit_export.png';
-        
-        // Create a temporary canvas to burn the filters in
-        const exportCanvas = document.createElement('canvas');
-        exportCanvas.width = this.displayCanvas.width;
-        exportCanvas.height = this.displayCanvas.height;
-        const ctx = exportCanvas.getContext('2d');
-        ctx.filter = this.displayCanvas.style.filter;
-        ctx.drawImage(this.displayCanvas, 0, 0);
-        
-        link.href = exportCanvas.toDataURL('image/png');
-        link.click();
+    destroy() {
+        this.canvas?.dispose();
     }
-
-    destroy() {}
 }
