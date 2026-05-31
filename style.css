@@ -1,10 +1,10 @@
 :root {
-    /* Color Palette - Cyber Futuristic */
+    /* Color Palette - Cyber Futuristic (Dark Default) */
     --bg-primary: #020617;
     --bg-secondary: #0f172a;
     --bg-glass: rgba(15, 23, 42, 0.7);
-    --accent-primary: #22d3ee; /* Cyan 400 */
-    --accent-secondary: #3b82f6; /* Blue 500 */
+    --accent-primary: #22d3ee;
+    --accent-secondary: #3b82f6;
     --accent-glow: rgba(34, 211, 238, 0.3);
     --text-primary: #f8fafc;
     --text-secondary: #94a3b8;
@@ -15,10 +15,16 @@
     --sidebar-collapsed-width: 85px;
     --header-height: 75px;
     --transition-speed: 0.4s;
-    
-    /* Elevation & Effects */
-    --shadow-premium: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-    --glass-blur: blur(14px);
+}
+
+[data-theme="light"] {
+    --bg-primary: #f8fafc;
+    --bg-secondary: #f1f5f9;
+    --bg-glass: rgba(241, 245, 249, 0.8);
+    --text-primary: #0f172a;
+    --text-secondary: #64748b;
+    --border-glass: rgba(0, 0, 0, 0.1);
+    --accent-glow: rgba(34, 211, 238, 0.1);
 }
 
 * {

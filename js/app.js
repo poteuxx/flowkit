@@ -21,9 +21,76 @@ class App {
         this.renderSidebar();
         this.handleRouting();
         this.setupEliteFeatures();
+        this.setupShellInteractions();
         
         window.onpopstate = () => this.handleRouting();
-        console.log('Poteuxx System: Flowkit Elite Online');
+    }
+
+    setupShellInteractions() {
+        // 1. Logo Navigation
+        document.getElementById('main-logo').onclick = () => this.navigate('dashboard');
+
+        // 2. Sidebar Search
+        const searchInput = document.getElementById('tool-search');
+        const searchIcon = document.getElementById('search-icon-btn');
+        
+        const performSearch = () => {
+            const query = searchInput.value.toLowerCase();
+            const links = document.querySelectorAll('.nav-link');
+            links.forEach(link => {
+                const text = link.innerText.toLowerCase();
+                link.style.display = text.includes(query) ? 'flex' : 'none';
+            });
+        };
+        
+        searchInput.oninput = performSearch;
+        searchIcon.onclick = () => searchInput.focus();
+
+        // 3. Theme Toggle
+        const themeBtn = document.getElementById('theme-toggle');
+        themeBtn.onclick = () => {
+            const isLight = document.body.getAttribute('data-theme') === 'light';
+            document.body.setAttribute('data-theme', isLight ? 'dark' : 'light');
+            themeBtn.className = isLight ? 'fa-solid fa-moon' : 'fa-solid fa-sun';
+        };
+
+        // 4. User Profile & Memory
+        const profileBtn = document.getElementById('user-profile-btn');
+        const nameDisp = document.getElementById('user-display-name');
+        const avatarDisp = document.getElementById('user-avatar');
+
+        // Initial Load
+        const savedName = localStorage.getItem('poteuxx_user_name') || 'Utilisateur';
+        const savedAvatar = localStorage.getItem('poteuxx_user_avatar');
+        nameDisp.innerText = savedName;
+        if (savedAvatar) avatarDisp.style.backgroundImage = `url(${savedAvatar})`;
+
+        profileBtn.onclick = () => {
+            const newName = prompt('Votre nom :', nameDisp.innerText);
+            if (newName) {
+                localStorage.setItem('poteuxx_user_name', newName);
+                nameDisp.innerText = newName;
+            }
+            
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.accept = 'image/*';
+            fileInput.onchange = (e) => {
+                const reader = new FileReader();
+                reader.onload = (f) => {
+                    localStorage.setItem('poteuxx_user_avatar', f.target.result);
+                    avatarDisp.style.backgroundImage = `url(${f.target.result})`;
+                };
+                reader.readAsDataURL(e.target.files[0]);
+            };
+            if (confirm('Voulez-vous changer votre image de profil ?')) fileInput.click();
+        };
+
+        // 5. Notifications
+        document.getElementById('notif-bell').onclick = () => {
+            alert('Poteuxx System: Aucune nouvelle notification.');
+            document.getElementById('notif-badge').style.display = 'none';
+        };
     }
 
     setupEliteFeatures() {
@@ -210,8 +277,38 @@ class App {
     }
 
     renderSidebar() {
-        // (Sidebar logic updated to include Elite styling and star system...)
-        // ... (truncated for brevity, implementation follows the new registry structure)
+        const currentToolId = this.getCurrentToolId();
+        const nav = document.getElementById('sidebar-nav');
+        nav.innerHTML = '';
+
+        // Add System Home Link
+        const homeLink = document.createElement('div');
+        homeLink.className = `nav-link ${currentToolId === 'dashboard' ? 'active' : ''}`;
+        homeLink.innerHTML = `<i class="fa-solid fa-house"></i> <span>Dashboard</span>`;
+        homeLink.onclick = () => this.navigate('dashboard');
+        nav.appendChild(homeLink);
+
+        // Group by Category
+        const cats = {};
+        Object.entries(tools).forEach(([id, t]) => {
+            if (!cats[t.category]) cats[t.category] = [];
+            cats[t.category].push({ id, ...t });
+        });
+
+        Object.entries(cats).forEach(([cat, items]) => {
+            const catHeader = document.createElement('div');
+            catHeader.style = 'font-size: 0.65rem; text-transform: uppercase; letter-spacing: 2px; color: var(--text-secondary); padding: 1.5rem 1.5rem 0.5rem; font-weight: 800;';
+            catHeader.innerText = cat;
+            nav.appendChild(catHeader);
+
+            items.forEach(item => {
+                const link = document.createElement('div');
+                link.className = `nav-link ${currentToolId === item.id ? 'active' : ''}`;
+                link.innerHTML = `<i class="${item.icon}"></i> <span>${item.name}</span>`;
+                link.onclick = () => this.navigate(item.id);
+                nav.appendChild(link);
+            });
+        });
     }
 }
 
