@@ -1,0 +1,131 @@
+:root {
+    /* Color Palette - Cyber Futuristic */
+    --bg-primary: #020617;
+    --bg-secondary: #0f172a;
+    --bg-glass: rgba(15, 23, 42, 0.7);
+    --accent-primary: #22d3ee; /* Cyan 400 */
+    --accent-secondary: #3b82f6; /* Blue 500 */
+    --accent-glow: rgba(34, 211, 238, 0.3);
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --border-glass: rgba(255, 255, 255, 0.08);
+    
+    /* Spacing & Sizes */
+    --sidebar-width: 290px;
+    --sidebar-collapsed-width: 85px;
+    --header-height: 75px;
+    --transition-speed: 0.4s;
+    
+    /* Elevation & Effects */
+    --shadow-premium: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    --glass-blur: blur(14px);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+
+body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+    background: radial-gradient(circle at 50% -20%, #0f172a, #020617);
+}
+
+/* Layout Shell */
+#app-shell {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+}
+
+/* Sidebar Styling - Futuristic Vertical Navigation */
+aside#sidebar {
+    width: var(--sidebar-width);
+    height: 100%;
+    background: var(--bg-glass);
+    backdrop-filter: var(--glass-blur);
+    border-right: 1px solid var(--border-glass);
+    display: flex;
+    flex-direction: column;
+    transition: all var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 100;
+}
+
+/* Main Content Area */
+main#content-area {
+    flex-grow: 1;
+    height: 100%;
+    overflow-y: hidden;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+/* Subtle glow background for the entire scene */
+main#content-area::after {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 40%; height: 40%;
+    background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+    filter: blur(80px);
+    z-index: -1;
+    pointer-events: none;
+}
+
+header#topbar {
+    height: var(--header-height);
+    width: 100%;
+    display: flex;
+    align-items: center;
+    padding: 0 2.5rem;
+    background: rgba(2, 6, 23, 0.5);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border-glass);
+}
+
+/* Enhanced Glass Card */
+.glass-card {
+    background: rgba(30, 41, 59, 0.4);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--border-glass);
+    border-radius: 1.25rem;
+    padding: 1.75rem;
+    box-shadow: var(--shadow-premium);
+    transition: transform 0.3s ease, background 0.3s ease;
+}
+
+.glass-card:hover {
+    background: rgba(30, 41, 59, 0.6);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Typography */
+h1 { font-size: 1.8rem; font-weight: 700; background: linear-gradient(to right, var(--accent-primary), var(--accent-secondary)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+h2 { font-size: 1.4rem; color: var(--text-primary); }
+p { color: var(--text-secondary); line-height: 1.6; }
+
+/* Scrollbar Styling */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-primary); }
+::-webkit-scrollbar-thumb { background: var(--bg-secondary); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent-primary); }
+
+/* Mobile Adaptations */
+@media (max-width: 768px) {
+    aside#sidebar {
+        position: fixed;
+        left: -100%;
+        width: 80%;
+    }
+    aside#sidebar.active {
+        left: 0;
+    }
+}
