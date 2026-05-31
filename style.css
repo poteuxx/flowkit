@@ -124,7 +124,44 @@ p { color: var(--text-secondary); line-height: 1.6; }
 ::-webkit-scrollbar-thumb { background: var(--bg-secondary); border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--accent-primary); }
 
-/* Mobile Adaptations */
+/* Sidebar Links */
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.85rem 1.5rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-radius: 0.75rem;
+    margin: 0.25rem 0.75rem;
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+.nav-link i {
+    font-size: 1.1rem;
+    width: 20px;
+    text-align: center;
+}
+
+.nav-link:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+}
+
+.nav-link.active {
+    background: rgba(34, 211, 238, 0.1);
+    color: var(--accent-primary);
+    font-weight: 700;
+    border: 1px solid rgba(34, 211, 238, 0.2);
+}
+
+.nav-link.active i {
+    color: var(--accent-primary);
+}
+
 @media (max-width: 768px) {
     aside#sidebar {
         position: fixed;
