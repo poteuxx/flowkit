@@ -26,6 +26,9 @@ export default class ImageEditorModule {
                         <button id="add-layer" title="Ajouter une image" style="background: var(--bg-secondary); border: 1px solid var(--border-glass); color: white; padding: 0.5rem 1rem; border-radius: 0.4rem; cursor: pointer;">
                             <i class="fa-solid fa-plus"></i>
                         </button>
+                        <button id="add-text" title="Ajouter du texte" style="background: var(--bg-secondary); border: 1px solid var(--border-glass); color: white; padding: 0.5rem 1rem; border-radius: 0.4rem; cursor: pointer;">
+                            <i class="fa-solid fa-font"></i>
+                        </button>
                         <button id="export-image" title="Exporter" style="background: var(--accent-primary); border: none; color: white; padding: 0.5rem 1rem; border-radius: 0.4rem; cursor: pointer;">
                             <i class="fa-solid fa-download"></i> Exporter
                         </button>
@@ -78,6 +81,7 @@ export default class ImageEditorModule {
             if (file) this.addLayer(file);
         };
 
+        document.getElementById('add-text').onclick = () => this.addTextLayer();
         const exportBtn = document.getElementById('export-image');
         exportBtn.onclick = () => this.export();
 
@@ -90,6 +94,29 @@ export default class ImageEditorModule {
                 this.applyFilters();
             };
         });
+    }
+
+    addTextLayer() {
+        const text = prompt('Texte :', 'FLOWKIT');
+        if (!text) return;
+
+        const canvas = document.createElement('canvas');
+        canvas.width = 800; canvas.height = 200;
+        const ctx = canvas.getContext('2d');
+        ctx.font = 'bold 100px Inter';
+        ctx.fillStyle = '#06b6d4';
+        ctx.textAlign = 'center';
+        ctx.fillText(text, 400, 120);
+
+        this.layers.push({
+            id: Date.now(),
+            name: `Texte: ${text}`,
+            canvas,
+            visible: true
+        });
+        this.activeLayerIndex = this.layers.length - 1;
+        this.updateLayerUI();
+        this.refreshWorkspace();
     }
 
     async addLayer(file) {

@@ -23,22 +23,43 @@ export default class SymbolsModule {
             glitch: ['\u0300', '\u0301', '\u0302', '\u0303', '\u0304', '\u0305', '\u0306', '\u0307', '\u0308', '\u0309', '\u030a', '\u030b', '\u030c', '\u030d', '\u030e', '\u030f']
         };
 
-        this.decorations = ['★ ', ' ♔', '꧁ ', ' ꧂', '『 ', ' 』', '░ ', ' ░'];
+        this.decorations = ['★ ', ' ♔', '꧁ ', ' ꧂', '『 ', ' 』', '░ ', ' ░', '〆', '亗', '卍'];
+        this.categories = {
+            'Populaire': ['★', '☆', '♥', '♡', '✔', '✘', '✉', '⌛'],
+            'Gaming': ['亗', '〆', '卍', '气', '☯', '♛', '♚', '⚡'],
+            'Flèches': ['↑', '↓', '←', '→', '↔', '↕', '↖', '↗'],
+            'Aesthetic': ['『', '』', '「', '」', '【', '】', '〔', '〕']
+        };
     }
 
     async render() {
         this.container.innerHTML = `
-            <div class="symbols-container" style="max-width: 800px; margin: 0 auto;">
+            <div class="symbols-container" style="max-width: 900px; margin: 0 auto;">
                 <div class="glass-card" style="margin-bottom: 2rem;">
-                    <h2 style="margin-bottom: 1rem;">Générateur de Nickname</h2>
-                    <p style="margin-bottom: 1.5rem;">Entrez votre texte pour générer des variantes stylisées instantanément.</p>
-                    <input type="text" id="symbol-input" placeholder="Tapez votre pseudo..." style="width: 100%; background: rgba(0,0,0,0.2); border: 1px solid var(--border-glass); border-radius: 0.5rem; padding: 1rem; color: white; font-size: 1.2rem; outline: none; transition: border-color 0.3s focus { border-color: var(--accent-primary); }">
+                    <h2 style="margin-bottom: 1rem;">Générateur de Nickname Pro</h2>
+                    <input type="text" id="symbol-input" placeholder="Pseudo Flowkit..." style="width: 100%; ...">
                 </div>
 
-                <div id="symbol-results" style="display: flex; flex-direction: column; gap: 1rem;">
-                    <!-- Results will appear here -->
+                <div class="glass-card" style="margin-bottom: 2rem;">
+                    <h4 style="margin-bottom: 1rem; font-size: 0.8rem; text-transform: uppercase; color: var(--text-secondary);">Bibliothèque de Symboles</h4>
+                    <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                        ${Object.entries(this.categories).map(([cat, syms]) => `
+                            <div style="margin-bottom: 1rem; width: 100%;">
+                                <p style="font-size: 0.7rem; color: var(--accent-primary); margin-bottom: 0.5rem;">${cat}</p>
+                                <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                                    ${syms.map(s => `<button class="sym-box" onclick="document.getElementById('symbol-input').value += '${s}'; document.getElementById('symbol-input').dispatchEvent(new Event('input'))">${s}</button>`).join('')}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
                 </div>
+
+                <div id="symbol-results" style="display: flex; flex-direction: column; gap: 1rem;"></div>
             </div>
+            <style>
+                .sym-box { background: rgba(255,255,255,0.05); border: 1px solid var(--border-glass); color: white; width: 40px; height: 40px; border-radius: 0.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+                .sym-box:hover { border-color: var(--accent-primary); background: rgba(34, 211, 238, 0.1); }
+            </style>
         `;
 
         const input = document.getElementById('symbol-input');
